@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speed Cube Finder</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #4878e1;
+      --card: rgba(255, 255, 255, 0.88);
+      --text: #15171c;
+      --muted: #050e20;
+      --accent: #6757e8;
+      --accent-light: #ece9ff;
+      --border: #e5e7ed;
+      --shadow: 0 25px 70px rgba(25, 25, 45, 0.10);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, #e8e4ff 0, transparent 28%),
+        radial-gradient(circle at 85% 80%, #dff4ff 0, transparent 28%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    /* ---------- HEADER ---------- */
+
+    .top {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .cube-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 14px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #877ae7, #93f48a);
+      color: white;
+      font-size: 24px;
+      box-shadow: 0 10px 30px rgba(103, 87, 232, 0.28);
+      transform: rotate(-3deg);
+    }
+
+    .top h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      letter-spacing: -1.5px;
+      line-height: 1.05;
+    }
+
+    .top p {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* ---------- PROGRESS ---------- */
+
+    .progress-wrapper {
+      margin: 0 auto 18px;
+      max-width: 600px;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(90deg, #dee857, #ffc17b);
+      border-radius: inherit;
+      transition: width 0.5s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    /* ---------- CARD ---------- */
+
+    .card {
+      position: relative;
+      min-height: 470px;
+      padding: clamp(26px, 6vw, 52px);
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+    }
+
+    .question {
+      animation: questionIn 0.5s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    @keyframes questionIn {
+      from {
+        opacity: 0;
+        transform: translateX(35px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .question-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .question h2 {
+      font-size: clamp(24px, 5vw, 34px);
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      max-width: 620px;
+    }
+
+    .question-description {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 590px;
+    }
+
+    /* ---------- ANSWERS ---------- */
+
+    .answers {
+      display: grid;
+      gap: 11px;
+      margin-top: 30px;
+    }
+
+    .answer {
+      position: relative;
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.65);
+      border-radius: 15px;
+      padding: 17px 18px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text);
+      font: inherit;
+      transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .answer:hover {
+      transform: translateY(-2px);
+      border-color: #bdb7ff;
+      background: white;
+      box-shadow: 0 8px 24px rgba(50,40,100,.08);
+    }
+
+    .answer:active {
+      transform: translateY(0) scale(.99);
+    }
+
+    .answer.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      box-shadow: 0 8px 25px rgba(103,87,232,.12);
+    }
+
+    .answer-title {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .answer-subtitle {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .answer-check {
+      position: absolute;
+      right: 17px;
+      top: 50%;
+      transform: translateY(-50%) scale(.5);
+      opacity: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--accent);
+      font-size: 12px;
+      transition: .2s ease;
+    }
+
+    .answer.selected .answer-check {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+
+    /* ---------- FOOTER ---------- */
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .back-button,
+    .next-button,
+    .restart-button {
+      border: 0;
+      border-radius: 13px;
+      padding: 13px 19px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .back-button {
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .back-button:hover {
+      color: var(--text);
+      background: #f0f1f5;
+    }
+
+    .next-button,
+    .restart-button {
+      color: white;
+      background: var(--accent);
+      box-shadow: 0 8px 20px rgba(103,87,232,.25);
+    }
+
+    .next-button:hover,
+    .restart-button:hover {
+      transform: translateY(-2px);
+      background: #5848dc;
+      box-shadow: 0 12px 25px rgba(103,87,232,.32);
+    }
+
+    .next-button:disabled {
+      cursor: not-allowed;
+      opacity: .4;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ---------- RESULTS ---------- */
+
+    .results {
+      animation: resultIn .65s cubic-bezier(.22,1,.36,1);
+    }
+
+    @keyframes resultIn {
+      from {
+        opacity: 0;
+        transform: translateY(25px) scale(.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .result-header {
+      text-align: center;
+    }
+
+    .result-icon {
+      width: 66px;
+      height: 66px;
+      margin: 0 auto 20px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #6757e8, #887aff);
+      color: white;
+      font-size: 31px;
+      box-shadow: 0 14px 35px rgba(103,87,232,.25);
+    }
+
+    .result-header h2 {
+      font-size: 31px;
+      letter-spacing: -.8px;
+    }
+
+    .result-header p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .summary-item {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(255,255,255,.55);
+    }
+
+    .summary-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .summary-value {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .result-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 26px;
+    }
+
+    /* ---------- MOBILE ---------- */
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+        align-items: flex-start;
+        padding-top: 30px;
+      }
+
+      .top {
+        margin-bottom: 18px;
+      }
+
+      .top h1 {
+        font-size: 30px;
+      }
+
+      .card {
+        min-height: 0;
+        padding: 26px 21px;
+        border-radius: 23px;
+      }
+
+      .question h2 {
+        font-size: 25px;
+      }
+
+      .answers {
+        margin-top: 24px;
+      }
+
+      .card-footer {
+        margin-top: 24px;
+      }
+    }
+
+    /* ---------- REDUCED MOTION ---------- */
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app">
+
+    <header class="top">
+      <div class="cube-icon">🧊</div>
+      <h1>Speed Cube Finder</h1>
+      <p>A very important survey about a very important person who is yet to be a speedcuber.</p>
+    </header>
+
+    <div class="progress-wrapper" id="progressWrapper">
+      <div class="progress-info">
+        <span id="progressText">Question 1 of 4</span>
+        <span id="progressPercent">25%</span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <section class="card" id="card">
+      <!-- Questions are inserted here by JavaScript -->
+    </section>
+
+  </main>
+
+  <script>
+    const questions = [
+      {
+        title: "Do you want your cube to be UV coated?",
+        description:
+          "UV coating gives the outside of the cube a glossy, premium-feeling finish. It can also make the cube feel a little different in your hands.",
+        answers: [
+          {
+            title: "Yes, definitely",
+            subtitle: "I want that shiny UV-coated finish."
+          },
+          {
+            title: "No",
+            subtitle: "I prefer the normal / non-UV finish (e.g. frosted/matte surface)."
+          },
+          {
+            title: "I don't mind",
+            subtitle: "The finish isn't important to me."
+          }
+        ]
+      },
+{
+        title: "Do you prefer stickers on your cube?",
+        description:
+          "Stickers allow your cube to be customizable, but unless you're colourblind, please get stickerless.",
+        answers: [
+          {
+            title: "Yes",
+            subtitle: "I'm a normal dude who just wants a fast cube."
+          },
+          {
+            title: "No",
+            subtitle: "I like customizing more/ I'm colourblind."
+          },
+          
+        ]
+      },
+{ 
+        title: "Do you want your cube to be magnetic?",
+        description:
+          "Magnets help the surfaces of the cube to allign well. This is useful when turning fast as it reduces the amount of lockups. ",
+        answers: [
+          {
+            title: "Yes",
+            subtitle: "Strong magnets that pull the layers toward each other."
+          },
+          {
+            title: "No",
+            subtitle: "I'd rather control it on my own without the help of magnets."
+          },
+          {
+            title: "I don't mind",
+            subtitle: "The magnets don't matter; as long as my cube is good I'm happy. "
+          }
+        ]
+      },
+
+{
+  title: "Do you want accessories in the box?",
+  description:
+    "Some cubes come with extras like a solving guide, display stand, adjustment tools, or other accessories. These can be useful, but they can also add to the price.",
+  answers: [
+    {
+      title: "Yes, I'd like some",
+      subtitle: "I'd like a guide and a stand to come with my cube."
+    },
+    {
+      title: "I don't mind",
+      subtitle: "If accessories come with it, great — but I wouldn't choose a cube because of them."
+    },
+    {
+      title: "No",
+      subtitle: "I'd rather save the money and spend it on the cube itself."
+    }
+  ]
+},
+
+
+      {
+        title: "How tight is your budget?",
+        description:
+          "Be honest — there are good cubes at lots of different price points, so it's not bad if you get something cheap.",
+        answers: [
+          {
+            title: "Under £8",
+            subtitle: "Really, really tight budget, but good options are still available."
+          },
+          {
+            title: "£8–£15",
+            subtitle: "I'd like to keep it fairly cheap."
+          },
+          {
+            title: "£15–£25",
+            subtitle: "I'm happy to spend a bit more for a better cube."
+          },
+          
+        ]
+      },
+
+{
+  title: "Do you prefer a fast or controllable cube?",
+  description:
+    "Some cubes turn extremely quickly and effortlessly, while others feel more controlled and stable. Your preference can make a big difference to how a cube feels.",
+  answers: [
+    {
+      title: "Very fast and effortless",
+      subtitle: "I want my cube to fly through turns with very little effort."
+    },
+    {
+      title: "Balanced",
+      subtitle: "I want a good mix of speed, smoothness, and control."
+    },
+    {
+      title: "More slow and controllable",
+      subtitle: "I'd rather have precise, controlled turns than maximum speed."
+    }
+  ]
+},
+
+{
+  title: "Do you like a light or heavier cube?",
+  description:
+    "Cube weight can change how the cube feels while turning. Lighter cubes can feel quicker and more effortless, while heavier cubes can feel more solid and stable.",
+  answers: [
+    {
+      title: "Very light",
+      subtitle: "I want something light and effortless that feels quick in my hands."
+    },
+    {
+      title: "Medium",
+      subtitle: "I want a balanced weight that doesn't feel too light or too heavy."
+    },
+    {
+      title: "Heavier",
+      subtitle: "I prefer a more solid and substantial feeling cube."
+    }
+  ]
+},
+
+      
+      {
+        title: "Are you willing to pay more for customization and settings?",
+        description:
+          "Some cubes let you adjust things like magnet strength, tension, tightness, and other settings.",
+        answers: [
+          {
+            title: "Yes — give me all the settings",
+            subtitle: "I like being able to customize how my cube feels."
+          },
+          {
+            title: "Maybe",
+            subtitle: "I don't need a whole load of adjustments, the basics are fine."
+          },
+          {
+            title: "Not really",
+            subtitle: "I'd rather keep things simple."
+          },
+         
+        ]
+      },
+
+      {
+        title: "Do you specifically want MoYu or GAN?",
+        description:
+          "MoYu and GAN make many of popular speedcubes, but there are plenty of other brands worth considering too.",
+        answers: [
+          {
+            title: "MoYu and GAN only",
+            subtitle: "I specifically want a MoYu or GAN cube."
+          },
+          {
+            title: "Mostly MoYu or GAN",
+            subtitle: "I'd prefer MoYu, but I'm open to high-ranked alternatives."
+          },
+          {
+            title: "Any brand is fine",
+            subtitle: "Pick whatever cube fits my answers best."
+          },
+         
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let answers = new Array(questions.length).fill(null);
+
+    const card = document.getElementById("card");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressWrapper = document.getElementById("progressWrapper");
+
+    function renderQuestion() {
+      const question = questions[currentQuestion];
+      const selectedAnswer = answers[currentQuestion];
+
+      const percent = Math.round(
+        ((currentQuestion + 1) / questions.length) * 100
+      );
+
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent =
+        `Question ${currentQuestion + 1} of ${questions.length}`;
+      progressPercent.textContent = `${percent}%`;
+
+      card.innerHTML = `
+        <div class="question">
+
+          <div class="question-number">
+            ${currentQuestion + 1}
+          </div>
+
+          <h2>${question.title}</h2>
+
+          <p class="question-description">
+            ${question.description}
+          </p>
+
+          <div class="answers">
+            ${question.answers.map((answer, index) => `
+              <button
+                class="answer ${selectedAnswer === index ? "selected" : ""}"
+                data-index="${index}"
+              >
+                <span class="answer-title">
+                  ${answer.title}
+                </span>
+
+                <span class="answer-subtitle">
+                  ${answer.subtitle}
+                </span>
+
+                <span class="answer-check">✓</span>
+              </button>
+            `).join("")}
+          </div>
+
+          <div class="card-footer">
+
+            <button
+              class="back-button"
+              id="backButton"
+              ${currentQuestion === 0 ? "style='visibility:hidden'" : ""}
+            >
+              ← Back
+            </button>
+
+            <button
+              class="next-button"
+              id="nextButton"
+              ${selectedAnswer === null ? "disabled" : ""}
+            >
+              ${currentQuestion === questions.length - 1
+                ? "Finish survey"
+                : "Next →"}
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+      document.querySelectorAll(".answer").forEach(button => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.index);
+
+          answers[currentQuestion] = index;
+
+          document.querySelectorAll(".answer").forEach(btn => {
+            btn.classList.remove("selected");
+          });
+
+          button.classList.add("selected");
+
+          document.getElementById("nextButton").disabled = false;
+        });
+      });
+
+      document.getElementById("nextButton").addEventListener("click", next);
+
+      document.getElementById("backButton").addEventListener("click", previous);
+    }
+
+    function next() {
+      if (answers[currentQuestion] === null) return;
+
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function previous() {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+      }
+    }
+
+    function showResults() {
+      progressWrapper.style.display = "none";
+
+      const summary = questions.map((question, index) => {
+        const selected = question.answers[answers[index]];
+
+        return `
+          <div class="summary-item">
+            <span class="summary-label">
+              ${question.title}
+            </span>
+
+            <span class="summary-value">
+              ${selected.title}
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      card.innerHTML = `
+        <div class="results">
+
+          <div class="result-header">
+            <div class="result-icon">✓</div>
+
+            <h2>Survey complete!</h2>
+
+            <p>
+              Here's the information you need to find my perfect speed cube. DO NOT FORGET TO USE A 5% DISCOUNT CODE AT CHECKOUT!
+            </p>
+          </div>
+
+          <div class="summary">
+            ${summary}
+          </div>
+
+          <div class="result-actions">
+            <button class="restart-button" id="restartButton">
+              Start again
+            </button>
+          </div>
+
+        </div>
+      `;
+
+      document
+        .getElementById("restartButton")
+        .addEventListener("click", restart);
+    }
+
+    function restart() {
+      currentQuestion = 0;
+      answers = new Array(questions.length).fill(null);
+
+      progressWrapper.style.display = "block";
+
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+
+</body>
+</html>
